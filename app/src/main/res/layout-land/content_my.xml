@@ -17,5 +17,9 @@
         android:layout_width="wrap_content"
         android:text="@string/button_send"
         android:onClick="sendMessage"/>
+    <Button android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="@string/button_scan"
+        android:onClick="scan"/>
 
 </LinearLayout>
