@@ -1,4 +1,4 @@
-package de.mlte.myfirstapp;
+package de.mlte.icebox;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,7 +30,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Intent intent = getIntent();
-        String message = intent.getStringExtra(MyActivity.EXTRA_MESSAGE);
+        String message = intent.getStringExtra(IceboxActivity.EXTRA_MESSAGE);
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.content);
         TextView textView = new TextView(this);
         textView.setTextSize(40);
