@@ -7,7 +7,7 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_icebox"
     android:orientation="horizontal">
-    <EditText
+    <!--<EditText
         android:layout_height="wrap_content"
         android:layout_width="0dp"
         android:id="@+id/edit_message"
@@ -20,6 +20,11 @@
     <Button android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:text="@string/get_drinks"
-        android:onClick="getDrinks"/>
+        android:onClick="getDrinks"/>-->
+
+    <ListView android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/list"
+        android:padding="4sp"/>
 
 </LinearLayout>

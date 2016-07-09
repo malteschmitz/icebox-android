@@ -6,4 +6,5 @@
     <string name="button_network">Net</string>
     <string name="get_drinks">Drinks</string>
     <string name="no_drinks">no drinks available</string>
+    <string name="scan">Scan</string>
 </resources>

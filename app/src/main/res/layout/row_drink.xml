@@ -3,6 +3,18 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:id="@+id/name"/>
-    <TextView android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:id="@+id/price"/>
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:id="@+id/name"
+        android:textSize="20sp"
+        android:padding="4sp"/>
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:id="@+id/price"
+        android:textSize="20sp"
+        android:padding="4sp"/>
 </LinearLayout>
