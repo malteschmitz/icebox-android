@@ -57,7 +57,7 @@ public class DrinkActivity extends AppCompatActivity {
     public void buy(View view) {
         Consumption consumption = new Consumption() {{
             barcode = drink.getBarcode();
-            username = "Malte";
+            username = "bülülülüp";
         }};
         new BuyTask().execute(consumption);
         Button button = (Button) findViewById(R.id.buy);

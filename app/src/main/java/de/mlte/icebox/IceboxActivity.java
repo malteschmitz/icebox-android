@@ -2,11 +2,13 @@ package de.mlte.icebox;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 import com.goebl.david.Webb;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -36,7 +39,8 @@ import de.mlte.icebox.model.Serializer;
 
 public class IceboxActivity extends AppCompatActivity {
     public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
-    public static final String BASE_URI = "http://icebox.nobreakspace.org:8081";
+    //public static final String BASE_URI = "http://icebox.nobreakspace.org:8081";
+    public static final String BASE_URI = "http://172.23.208.176:8081";
     public static final String HDR_USER_AGENT = "Icebox Android Client";
     Webb webb;
 
@@ -153,11 +157,18 @@ public class IceboxActivity extends AppCompatActivity {
             }
 
             // Drink not found
-            Drink drink = new Drink() {{
-                name = "???";
-                barcode = scannedBarcode;
-            }};
-            drink(drink);
+            final Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Drink with barcode " + scannedBarcode + " not found!", Snackbar.LENGTH_INDEFINITE);
+            snackbar.setAction("OK", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    snackbar.dismiss();
+                }
+            });
+            View sbView = snackbar.getView();
+            TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+            textView.setTextColor(Color.YELLOW);
+            snackbar.show();
+
         }
     }
 }
