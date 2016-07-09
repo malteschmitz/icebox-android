@@ -6,14 +6,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 
 import com.goebl.david.Webb;
@@ -22,15 +21,7 @@ import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,12 +29,14 @@ import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
 
 public class IceboxActivity extends AppCompatActivity {
+    public static final String DRINKS_MESSAGE = "de.mlte.icebox.DRINKS_MESSAGE";
     Webb webb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_icebox);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -103,9 +96,10 @@ public class IceboxActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(List<Drink> drinks) {
-            for (Drink drink: drinks) {
-                Log.d("drink", drink.getName());
-            }
+            Intent intent = new Intent(IceboxActivity.this, DrinksActivity.class);
+            Drink[] drinkArray = drinks.toArray(new Drink[drinks.size()]);
+            intent.putExtra(DRINKS_MESSAGE, drinkArray);
+            startActivity(intent);
         }
     }
 

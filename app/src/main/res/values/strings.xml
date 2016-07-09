@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">Icebox</string>
+    <string name="app_name">Icebox App</string>
     <string name="action_settings">Settings</string>
     <string name="edit_message">Enter a message!</string>
     <string name="button_scan">Scan</string>
     <string name="button_network">Net</string>
     <string name="get_drinks">Drinks</string>
+    <string name="no_drinks">no drinks available</string>
 </resources>
