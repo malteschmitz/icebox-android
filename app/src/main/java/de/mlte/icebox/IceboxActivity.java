@@ -1,5 +1,6 @@
 package de.mlte.icebox;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -149,26 +150,22 @@ public class IceboxActivity extends AppCompatActivity {
         IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
         if (scanResult != null) {
             final String scannedBarcode = scanResult.getContents();
-            for (Drink drink: drinks) {
-                if (drink.getBarcode().equals(scannedBarcode)) {
-                    drink(drink);
-                    return;
+            if (scannedBarcode != null) {
+                for (Drink drink: drinks) {
+                    if (drink.getBarcode().equals(scannedBarcode)) {
+                        drink(drink);
+                        return;
+                    }
                 }
+
+                // Drink not found
+                new AlertDialog.Builder(this)
+                        .setTitle("Barcode not found!")
+                        .setMessage("Barcode " + scannedBarcode + " not found in the Icebox database!")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
             }
-
-            // Drink not found
-            final Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Drink with barcode " + scannedBarcode + " not found!", Snackbar.LENGTH_INDEFINITE);
-            snackbar.setAction("OK", new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    snackbar.dismiss();
-                }
-            });
-            View sbView = snackbar.getView();
-            TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
-            textView.setTextColor(Color.YELLOW);
-            snackbar.show();
-
         }
     }
 }
