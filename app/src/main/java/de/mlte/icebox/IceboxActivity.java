@@ -35,7 +35,7 @@ import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
 
 public class IceboxActivity extends AppCompatActivity {
-    public static final String DRINKS_MESSAGE = "de.mlte.icebox.DRINKS_MESSAGE";
+    public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
     Webb webb;
 
     @Override
@@ -66,7 +66,7 @@ public class IceboxActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (IceboxActivity.this.drinks.size() > position) {
                     Drink drink = IceboxActivity.this.drinks.get(position);
-                    Log.d("mlte", drink.getName() + " clicked");
+                    drink(drink);
                 }
             }
         });
@@ -75,6 +75,12 @@ public class IceboxActivity extends AppCompatActivity {
         webb = Webb.create();
         webb.setBaseUri("http://icebox.nobreakspace.org:8081");
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, "Icebox Android Client");
+    }
+
+    private void drink(Drink drink) {
+        Intent intent = new Intent(IceboxActivity.this, DrinkActivity.class);
+        intent.putExtra(DRINK_MESSAGE, drink);
+        startActivity(intent);
     }
 
     @Override
@@ -116,11 +122,6 @@ public class IceboxActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(List<Drink> drinks) {
-            //Intent intent = new Intent(IceboxActivity.this, DrinksActivity.class);
-            //Drink[] drinkArray = drinks.toArray(new Drink[drinks.size()]);
-            //intent.putExtra(DRINKS_MESSAGE, drinkArray);
-            //startActivity(intent);
-
             IceboxActivity.this.drinks = drinks;
 
             List<Map<String, String>> drinksList = new ArrayList<>(drinks.size());
@@ -141,8 +142,20 @@ public class IceboxActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
         if (scanResult != null) {
-            String re = scanResult.getContents();
-            Log.d("mlte", "Scan: " + re);
+            final String scannedBarcode = scanResult.getContents();
+            for (Drink drink: drinks) {
+                if (drink.getBarcode().equals(scannedBarcode)) {
+                    drink(drink);
+                    return;
+                }
+            }
+
+            // Drink not found
+            Drink drink = new Drink() {{
+                name = "???";
+                barcode = scannedBarcode;
+            }};
+            drink(drink);
         }
     }
 }
