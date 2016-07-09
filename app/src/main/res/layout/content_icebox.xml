@@ -15,11 +15,11 @@
         android:layout_weight="1"/>
     <Button android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="@string/button_send"
-        android:onClick="sendMessage"/>
-    <Button android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
         android:text="@string/button_scan"
         android:onClick="scan"/>
+    <Button android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="@string/get_drinks"
+        android:onClick="getDrinks"/>
 
 </LinearLayout>
