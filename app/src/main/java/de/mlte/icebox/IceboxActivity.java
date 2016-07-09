@@ -38,8 +38,7 @@ import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
 
 public class IceboxActivity extends AppCompatActivity {
-
-    public static final String EXTRA_MESSAGE = "de.mlte.myfirstapp.EXTRA_MESSAGE";
+    Webb webb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +47,10 @@ public class IceboxActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        // create the client (one-time, can be used from different threads)
+        webb = Webb.create();
+        webb.setBaseUri("http://icebox.nobreakspace.org:8081");
+        webb.setDefaultHeader(Webb.HDR_USER_AGENT, "Icebox Android Client");
     }
 
     @Override
@@ -92,14 +87,8 @@ public class IceboxActivity extends AppCompatActivity {
     }
 
     private class DrinkTask extends AsyncTask<Void, Void, List<Drink>> {
-
         @Override
         protected List<Drink> doInBackground(Void... params) {
-            // create the client (one-time, can be used from different threads)
-            Webb webb = Webb.create();
-            webb.setBaseUri("http://icebox.nobreakspace.org:8081");
-            webb.setDefaultHeader(Webb.HDR_USER_AGENT, "Icebox Android Client");
-
             JSONArray drinks = webb.get("/drinks")
                     .ensureSuccess()
                     .asJsonArray()
