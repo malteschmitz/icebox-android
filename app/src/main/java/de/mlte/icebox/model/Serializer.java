@@ -26,4 +26,11 @@ public class Serializer {
         }
         return drinks;
     }
+
+    public static JSONObject serializeConsumption(Consumption consumption) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("barcode", consumption.getBarcode());
+        jsonObject.put("username", consumption.getUsername());
+        return jsonObject;
+    }
 }

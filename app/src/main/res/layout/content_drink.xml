@@ -49,4 +49,19 @@
         android:id="@+id/barcodeText"
         android:layout_alignTop="@+id/barcodeLabel"
         android:layout_alignLeft="@+id/nameText" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Buy!"
+        android:id="@+id/buy"
+        android:layout_marginBottom="67dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="40sp"
+        android:paddingLeft="30sp"
+        android:paddingRight="30sp"
+        android:paddingTop="20sp"
+        android:paddingBottom="20sp"
+        android:onClick="buy"/>
 </RelativeLayout>

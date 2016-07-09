@@ -36,6 +36,8 @@ import de.mlte.icebox.model.Serializer;
 
 public class IceboxActivity extends AppCompatActivity {
     public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
+    public static final String BASE_URI = "http://icebox.nobreakspace.org:8081";
+    public static final String HDR_USER_AGENT = "Icebox Android Client";
     Webb webb;
 
     @Override
@@ -73,8 +75,8 @@ public class IceboxActivity extends AppCompatActivity {
 
         // create the client (one-time, can be used from different threads)
         webb = Webb.create();
-        webb.setBaseUri("http://icebox.nobreakspace.org:8081");
-        webb.setDefaultHeader(Webb.HDR_USER_AGENT, "Icebox Android Client");
+        webb.setBaseUri(BASE_URI);
+        webb.setDefaultHeader(Webb.HDR_USER_AGENT, HDR_USER_AGENT);
     }
 
     private void drink(Drink drink) {
