@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -30,6 +31,7 @@ import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,6 +62,9 @@ public class IceboxActivity extends AppCompatActivity {
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             new DrinkTask().execute();
+            if (user != null) {
+                new UserTask().execute(user.getUsername());
+            }
         }
     }
 
@@ -88,6 +93,35 @@ public class IceboxActivity extends AppCompatActivity {
         webb = Webb.create();
         webb.setBaseUri(BASE_URI);
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, HDR_USER_AGENT);
+
+        // Restore preferences
+        SharedPreferences settings = getPreferences(0);
+        String username = settings.getString("username", "");
+        setUser(null);
+        if (!username.equals("")) {
+            new UserTask().execute(username);
+        }
+    }
+
+    private class UserTask extends AsyncTask<String, Void, User> {
+        @Override
+        protected User doInBackground(String... params) {
+            JSONObject user = webb.get("/consumers/" + params[0])
+                    .ensureSuccess()
+                    .asJsonObject()
+                    .getBody();
+
+            try {
+                return Serializer.deserializeUser(user);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(User user) {
+            setUser(user);
+        }
     }
 
     private void drink(Drink drink) {
@@ -206,5 +240,19 @@ public class IceboxActivity extends AppCompatActivity {
     public void selectUser(View view) {
         Intent intent = new Intent(IceboxActivity.this, UsersActivity.class);
         startActivityForResult(intent, USER_REQUEST);
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+
+        SharedPreferences settings = getPreferences(0);
+        SharedPreferences.Editor editor = settings.edit();
+        if (user != null) {
+            editor.putString("username", user.getUsername());
+        } else {
+            editor.putString("username", "");
+        }
+        editor.commit();
     }
 }
