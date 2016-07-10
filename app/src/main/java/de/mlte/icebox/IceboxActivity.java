@@ -1,8 +1,10 @@
 package de.mlte.icebox;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -37,13 +39,17 @@ import java.util.Map;
 
 import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
+import de.mlte.icebox.model.User;
 
 public class IceboxActivity extends AppCompatActivity {
     public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
     //public static final String BASE_URI = "http://icebox.nobreakspace.org:8081";
-    public static final String BASE_URI = "http://172.23.208.176:8081";
+    public static final String BASE_URI = "http://192.168.0.35:8081";
     public static final String HDR_USER_AGENT = "Icebox Android Client";
+    private static final int USER_REQUEST = 1;
+    public static final String USER_MESSAGE = "de.mlte.icebox.USER_MESSAGE";
     Webb webb;
+    private User user;
 
     @Override
     protected void onResume() {
@@ -85,9 +91,12 @@ public class IceboxActivity extends AppCompatActivity {
     }
 
     private void drink(Drink drink) {
-        Intent intent = new Intent(IceboxActivity.this, DrinkActivity.class);
-        intent.putExtra(DRINK_MESSAGE, drink);
-        startActivity(intent);
+        if (this.user != null) {
+            Intent intent = new Intent(IceboxActivity.this, DrinkActivity.class);
+            intent.putExtra(DRINK_MESSAGE, drink);
+            intent.putExtra(USER_MESSAGE, user);
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -105,11 +114,27 @@ public class IceboxActivity extends AppCompatActivity {
                 break;
 
             case R.id.action_scan:
-                IntentIntegrator integrator = new IntentIntegrator(this);
-                integrator.initiateScan();
+                scanBarcode(null);
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void scanBarcode(View view) {
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.initiateScan();
+    }
+
+    private void setUser(User user) {
+        this.user = user;
+        TextView userText = (TextView) findViewById(R.id.userText);
+        if (user == null) {
+            userText.setText("No User Selected");
+            userText.setTextColor(Color.RED);
+        } else {
+            userText.setText(user.getUsername() + String.format(" (EUR %.2f)", user.getLedger() / 100d));
+            userText.setTextColor(Color.GREEN);
+        }
     }
 
     private class DrinkTask extends AsyncTask<Void, Void, List<Drink>> {
@@ -147,25 +172,39 @@ public class IceboxActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
-        if (scanResult != null) {
-            final String scannedBarcode = scanResult.getContents();
-            if (scannedBarcode != null) {
-                for (Drink drink: drinks) {
-                    if (drink.getBarcode().equals(scannedBarcode)) {
-                        drink(drink);
-                        return;
-                    }
-                }
-
-                // Drink not found
-                new AlertDialog.Builder(this)
-                        .setTitle("Barcode not found!")
-                        .setMessage("Barcode " + scannedBarcode + " not found in the Icebox database!")
-                        .setPositiveButton(android.R.string.ok, null)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
+        if (requestCode == IntentIntegrator.REQUEST_CODE) {
+            IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+            if (scanResult != null) {
+                handleScanResult(scanResult.getContents());
+            }
+        } else if (requestCode == USER_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                setUser((User) intent.getParcelableExtra(UsersActivity.RESULT_MESSAGE));
             }
         }
+    }
+
+    private void handleScanResult(String scannedBarcode) {
+        if (scannedBarcode == null) return;
+
+        for (Drink drink: drinks) {
+            if (drink.getBarcode().equals(scannedBarcode)) {
+                drink(drink);
+                return;
+            }
+        }
+
+        // Drink not found
+        new AlertDialog.Builder(this)
+                .setTitle("Barcode not found!")
+                .setMessage("Barcode " + scannedBarcode + " not found in the Icebox database!")
+                .setPositiveButton(android.R.string.ok, null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    public void selectUser(View view) {
+        Intent intent = new Intent(IceboxActivity.this, UsersActivity.class);
+        startActivityForResult(intent, USER_REQUEST);
     }
 }

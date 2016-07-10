@@ -33,4 +33,21 @@ public class Serializer {
         jsonObject.put("username", consumption.getUsername());
         return jsonObject;
     }
+
+    public static User deserializeUser(final JSONObject json) throws JSONException {
+        return new User() {{
+            username = json.getString("username");
+            avatarmail = json.getString("avatarmail");
+            ledger = json.getInt("ledger");
+            vds = json.getBoolean("vds");
+        }};
+    }
+
+    public static List<User> deserializeUsers(JSONArray json) throws JSONException {
+        List<User> users = new ArrayList<User>(json.length());
+        for (int i = 0; i < json.length(); i++) {
+            users.add(deserializeUser(json.getJSONObject(i)));
+        }
+        return users;
+    }
 }

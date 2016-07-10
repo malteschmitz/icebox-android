@@ -27,10 +27,12 @@ import java.util.Map;
 import de.mlte.icebox.model.Consumption;
 import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
+import de.mlte.icebox.model.User;
 
 public class DrinkActivity extends AppCompatActivity {
     private Drink drink;
     Webb webb;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +43,7 @@ public class DrinkActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         this.drink = (Drink) intent.getParcelableExtra(IceboxActivity.DRINK_MESSAGE);
+        this.user = (User) intent.getParcelableExtra(IceboxActivity.USER_MESSAGE);
 
         TextView nameTextView = (TextView) findViewById(R.id.nameText);
         nameTextView.setText(drink.getName());
@@ -57,7 +60,7 @@ public class DrinkActivity extends AppCompatActivity {
     public void buy(View view) {
         Consumption consumption = new Consumption() {{
             barcode = drink.getBarcode();
-            username = "bülülülüp";
+            username = DrinkActivity.this.user.getUsername();
         }};
         new BuyTask().execute(consumption);
         Button button = (Button) findViewById(R.id.buy);

@@ -8,4 +8,5 @@
     <string name="no_drinks">no drinks available</string>
     <string name="scan">Scan</string>
     <string name="title_activity_drink">Drink</string>
+    <string name="title_activity_users">UsersActivity</string>
 </resources>
