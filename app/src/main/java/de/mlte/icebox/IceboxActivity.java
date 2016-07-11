@@ -162,12 +162,10 @@ public class IceboxActivity extends AppCompatActivity {
     }
 
     private void drink(Drink drink) {
-        if (this.user != null) {
-            Intent intent = new Intent(IceboxActivity.this, DrinkActivity.class);
-            intent.putExtra(DRINK_MESSAGE, drink);
-            intent.putExtra(USER_MESSAGE, user);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(IceboxActivity.this, DrinkActivity.class);
+        intent.putExtra(DRINK_MESSAGE, drink);
+        intent.putExtra(USER_MESSAGE, user);
+        startActivity(intent);
     }
 
     @Override

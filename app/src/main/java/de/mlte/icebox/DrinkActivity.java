@@ -49,13 +49,22 @@ public class DrinkActivity extends AppCompatActivity {
     }
 
     public void buy(View view) {
-        Consumption consumption = new Consumption() {{
-            barcode = drink.getBarcode();
-            username = DrinkActivity.this.user.getUsername();
-        }};
-        new BuyTask().execute(consumption);
-        Button button = (Button) findViewById(R.id.buy);
-        button.setEnabled(false);
+        if (this.user != null) {
+            Consumption consumption = new Consumption() {{
+                barcode = drink.getBarcode();
+                username = DrinkActivity.this.user.getUsername();
+            }};
+            new BuyTask().execute(consumption);
+            Button button = (Button) findViewById(R.id.buy);
+            button.setEnabled(false);
+        } else {
+            Bundle bundle = new Bundle();
+            bundle.putString(AlertDialogFragment.ARG_TITLE, "Unable to buy!");
+            bundle.putString(AlertDialogFragment.ARG_MESSAGE, "Please select a user first.");
+            AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
+            alertDialogFragment.setArguments(bundle);
+            alertDialogFragment.show(getFragmentManager(), "tag");
+        }
     }
 
     private class BuyTask extends AsyncTask<Consumption, Void, Boolean> {
