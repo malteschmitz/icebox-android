@@ -1,31 +1,28 @@
 package de.mlte.icebox;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.goebl.david.Webb;
+import com.goebl.david.WebbException;
+import com.goebl.david.WebbUtils;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -33,6 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,13 +43,14 @@ import de.mlte.icebox.model.Serializer;
 import de.mlte.icebox.model.User;
 
 public class IceboxActivity extends AppCompatActivity {
-    public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
-    //public static final String BASE_URI = "http://icebox.nobreakspace.org:8081";
-    public static final String BASE_URI = "http://192.168.0.35:8081";
+    public static final String DEFAULT_BASE_URL = "http://icebox.nobreakspace.org:8081";
     public static final String HDR_USER_AGENT = "Icebox Android Client";
+
+    public static final String DRINK_MESSAGE = "de.mlte.icebox.DRINK_MESSAGE";
     private static final int USER_REQUEST = 1;
     public static final String USER_MESSAGE = "de.mlte.icebox.USER_MESSAGE";
-    Webb webb;
+    private static final String SETTINGS_USERNAME = "de.mlte.icebox.SETTINGS_USERNAME";
+    private Webb webb;
     private User user;
 
     @Override
@@ -91,25 +91,38 @@ public class IceboxActivity extends AppCompatActivity {
 
         // create the client (one-time, can be used from different threads)
         webb = Webb.create();
-        webb.setBaseUri(BASE_URI);
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, HDR_USER_AGENT);
 
         // Restore preferences
-        SharedPreferences settings = getPreferences(0);
-        String username = settings.getString("username", "");
         setUser(null);
+        String username = getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SETTINGS_USERNAME, "");
         if (!username.equals("")) {
             new UserTask().execute(username);
+        }
+    }
+
+    static String urlEncode(String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return value;
         }
     }
 
     private class UserTask extends AsyncTask<String, Void, User> {
         @Override
         protected User doInBackground(String... params) {
-            JSONObject user = webb.get("/consumers/" + params[0])
-                    .ensureSuccess()
-                    .asJsonObject()
-                    .getBody();
+            JSONObject user;
+            try {
+                webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
+
+                user = webb.get("/consumers/" + urlEncode(params[0]))
+                        .ensureSuccess()
+                        .asJsonObject()
+                        .getBody();
+            } catch (WebbException e) {
+                return null;
+            }
 
             try {
                 return Serializer.deserializeUser(user);
@@ -120,7 +133,9 @@ public class IceboxActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(User user) {
-            setUser(user);
+            if (user != null) {
+                setUser(user);
+            }
         }
     }
 
@@ -144,11 +159,13 @@ public class IceboxActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.action_settings:
-                Log.d("mlte", "Settings icon clicked");
+                Intent intent = new Intent(IceboxActivity.this, SettingsActivity.class);
+                startActivity(intent);
                 break;
 
             case R.id.action_scan:
                 scanBarcode(null);
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -174,10 +191,16 @@ public class IceboxActivity extends AppCompatActivity {
     private class DrinkTask extends AsyncTask<Void, Void, List<Drink>> {
         @Override
         protected List<Drink> doInBackground(Void... params) {
-            JSONArray drinks = webb.get("/drinks")
-                    .ensureSuccess()
-                    .asJsonArray()
-                    .getBody();
+            JSONArray drinks;
+            try {
+                webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
+                drinks = webb.get("/drinks")
+                        .ensureSuccess()
+                        .asJsonArray()
+                        .getBody();
+            } catch (WebbException e) {
+                return Collections.EMPTY_LIST;
+            }
 
             try {
                 return Serializer.deserializeDrinks(drinks);
@@ -202,6 +225,17 @@ public class IceboxActivity extends AppCompatActivity {
 
             ListView listView = (ListView) findViewById(R.id.list);
             listView.setAdapter(simpleAdapter);
+
+            if (drinks.isEmpty()) {
+                Snackbar snackbar = Snackbar
+                        .make(findViewById(android.R.id.content), "Icebox service not found!", Snackbar.LENGTH_LONG);
+
+                // Changing message text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+                snackbar.show();
+            }
         }
     }
 
@@ -246,12 +280,11 @@ public class IceboxActivity extends AppCompatActivity {
     protected void onStop(){
         super.onStop();
 
-        SharedPreferences settings = getPreferences(0);
-        SharedPreferences.Editor editor = settings.edit();
+        SharedPreferences.Editor editor = getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).edit();
         if (user != null) {
-            editor.putString("username", user.getUsername());
+            editor.putString(SETTINGS_USERNAME, user.getUsername());
         } else {
-            editor.putString("username", "");
+            editor.putString(SETTINGS_USERNAME, "");
         }
         editor.commit();
     }

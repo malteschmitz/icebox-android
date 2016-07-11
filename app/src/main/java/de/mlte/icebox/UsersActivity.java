@@ -3,12 +3,12 @@ package de.mlte.icebox;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -16,8 +16,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 import com.goebl.david.Webb;
+import com.goebl.david.WebbException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,13 +30,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.mlte.icebox.model.Drink;
 import de.mlte.icebox.model.Serializer;
 import de.mlte.icebox.model.User;
 
 public class UsersActivity extends AppCompatActivity {
     public static final String RESULT_MESSAGE = "de.mlte.icebox.RESULT_MESSAGE";
-    Webb webb;
+    private Webb webb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +60,6 @@ public class UsersActivity extends AppCompatActivity {
 
         // create the client (one-time, can be used from different threads)
         webb = Webb.create();
-        webb.setBaseUri(IceboxActivity.BASE_URI);
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, IceboxActivity.HDR_USER_AGENT);
     }
 
@@ -80,10 +80,16 @@ public class UsersActivity extends AppCompatActivity {
     private class UserTask extends AsyncTask<Void, Void, List<User>> {
         @Override
         protected List<User> doInBackground(Void... params) {
-            JSONArray users = webb.get("/consumers")
-                    .ensureSuccess()
-                    .asJsonArray()
-                    .getBody();
+            webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
+            JSONArray users;
+            try {
+                users = webb.get("/consumers")
+                        .ensureSuccess()
+                        .asJsonArray()
+                        .getBody();
+            } catch (WebbException e) {
+                return Collections.EMPTY_LIST;
+            }
 
             try {
                 return Serializer.deserializeUsers(users);
@@ -108,6 +114,17 @@ public class UsersActivity extends AppCompatActivity {
 
             ListView listView = (ListView) findViewById(R.id.usersList);
             listView.setAdapter(simpleAdapter);
+
+            if (users.isEmpty()) {
+                Snackbar snackbar = Snackbar
+                        .make(findViewById(android.R.id.content), "Icebox service not found!", Snackbar.LENGTH_LONG);
+
+                // Changing message text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+                snackbar.show();
+            }
         }
     }
 }

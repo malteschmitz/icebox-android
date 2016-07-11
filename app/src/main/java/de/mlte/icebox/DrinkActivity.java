@@ -8,21 +8,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.goebl.david.Webb;
+import com.goebl.david.WebbException;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import de.mlte.icebox.model.Consumption;
 import de.mlte.icebox.model.Drink;
@@ -31,7 +23,7 @@ import de.mlte.icebox.model.User;
 
 public class DrinkActivity extends AppCompatActivity {
     private Drink drink;
-    Webb webb;
+    private Webb webb;
     private User user;
 
     @Override
@@ -53,7 +45,6 @@ public class DrinkActivity extends AppCompatActivity {
 
         // create the client (one-time, can be used from different threads)
         webb = Webb.create();
-        webb.setBaseUri(IceboxActivity.BASE_URI);
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, IceboxActivity.HDR_USER_AGENT);
     }
 
@@ -73,25 +64,37 @@ public class DrinkActivity extends AppCompatActivity {
             JSONObject body = null;
             try {
                 body = Serializer.serializeConsumption(params[0]);
-                Log.d("mlte", body.toString());
-                final JSONObject response = webb.post("/consumptions")
+                webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
+                JSONObject response = webb.post("/consumptions")
                         .body(body)
                         .ensureSuccess()
                         .asJsonObject()
                         .getBody();
-                Log.d("mlte", response.toString());
+                Log.d("mlte", "Buy Response: " + response.toString());
+                // TODO handle response
             } catch (JSONException e) {
-                // TODO handle serialize excpetion
+                return false;
+            } catch (WebbException e) {
+                return false;
             }
-
-            // TODO handle possible exceptions thrown by ensureSuccess
 
             return true;
         }
 
         @Override
         protected void onPostExecute(Boolean success) {
-            DrinkActivity.this.finish();
+            Button button = (Button) findViewById(R.id.buy);
+            button.setEnabled(true);
+            if (success) {
+                DrinkActivity.this.finish();
+            } else {
+                Bundle bundle = new Bundle();
+                bundle.putString(AlertDialogFragment.ARG_TITLE, "Error");
+                bundle.putString(AlertDialogFragment.ARG_MESSAGE, "Unable to buy the drink.");
+                AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
+                alertDialogFragment.setArguments(bundle);
+                alertDialogFragment.show(getFragmentManager(), "tag");
+            }
         }
     }
 
