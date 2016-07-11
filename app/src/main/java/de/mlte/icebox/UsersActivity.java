@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -78,6 +79,16 @@ public class UsersActivity extends AppCompatActivity {
             }
         });
 
+        SwipeRefreshLayout swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        swipeRefresh.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        refresh();
+                    }
+                }
+        );
+
         // create the client (one-time, can be used from different threads)
         webb = Webb.create();
         webb.setDefaultHeader(Webb.HDR_USER_AGENT, IceboxActivity.HDR_USER_AGENT);
@@ -94,9 +105,16 @@ public class UsersActivity extends AppCompatActivity {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+
         if (networkInfo != null && networkInfo.isConnected()) {
+            swipeRefreshLayout.setRefreshing(true);
             new UserTask().execute();
+            return;
         }
+
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private List<User> users = Collections.EMPTY_LIST;
@@ -138,6 +156,9 @@ public class UsersActivity extends AppCompatActivity {
 
             ListView listView = (ListView) findViewById(R.id.usersList);
             listView.setAdapter(simpleAdapter);
+
+            SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (users.isEmpty()) {
                 Snackbar snackbar = Snackbar
