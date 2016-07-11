@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".UsersActivity">
+
+    <item
+        android:id="@+id/action_refresh_users"
+        android:title="@string/refresh_users"
+        app:showAsAction="never"/>
+</menu>

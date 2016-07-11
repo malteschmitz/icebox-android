@@ -22,7 +22,6 @@ import android.widget.TextView;
 
 import com.goebl.david.Webb;
 import com.goebl.david.WebbException;
-import com.goebl.david.WebbUtils;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -57,6 +56,10 @@ public class IceboxActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        refresh();
+    }
+
+    private void refresh() {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -151,29 +154,45 @@ public class IceboxActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_my, menu);
+        getMenuInflater().inflate(R.menu.menu_icebox, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            case R.id.action_refresh_drinks:
+                refresh();
+                break;
+
+            case R.id.action_select_user:
+                selectUser();
+                break;
+
             case R.id.action_settings:
-                Intent intent = new Intent(IceboxActivity.this, SettingsActivity.class);
-                startActivity(intent);
+                showSettings();
                 break;
 
             case R.id.action_scan:
-                scanBarcode(null);
+                scanBarcode();
                 break;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void scanBarcode(View view) {
+    private void showSettings() {
+        Intent intent = new Intent(IceboxActivity.this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
+    private void scanBarcode() {
         IntentIntegrator integrator = new IntentIntegrator(this);
         integrator.initiateScan();
+    }
+
+    public void scanBarcode(View view) {
+        scanBarcode();
     }
 
     private void setUser(User user) {
@@ -271,9 +290,13 @@ public class IceboxActivity extends AppCompatActivity {
         alertDialogFragment.show(getFragmentManager(), "tag");
     }
 
-    public void selectUser(View view) {
+    private void selectUser() {
         Intent intent = new Intent(IceboxActivity.this, UsersActivity.class);
         startActivityForResult(intent, USER_REQUEST);
+    }
+
+    public void selectUser(View view) {
+        selectUser();
     }
 
     @Override
