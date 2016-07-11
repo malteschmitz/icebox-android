@@ -229,12 +229,12 @@ public class IceboxActivity extends AppCompatActivity {
         }
 
         // Drink not found
-        new AlertDialog.Builder(this)
-                .setTitle("Barcode not found!")
-                .setMessage("Barcode " + scannedBarcode + " not found in the Icebox database!")
-                .setPositiveButton(android.R.string.ok, null)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show();
+        AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(AlertDialogFragment.ARG_TITLE, "Barcode not found!");
+        bundle.putString(AlertDialogFragment.ARG_MESSAGE, "Barcode " + scannedBarcode + " not found in the Icebox database!");
+        alertDialogFragment.setArguments(bundle);
+        alertDialogFragment.show(getFragmentManager(), "tag");
     }
 
     public void selectUser(View view) {
