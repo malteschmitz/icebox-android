@@ -23,6 +23,8 @@ import android.widget.TextView;
 
 import com.goebl.david.Webb;
 import com.goebl.david.WebbException;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.mlte.icebox.model.Serializer;
 import de.mlte.icebox.model.User;
 
 public class UsersActivity extends AppCompatActivity {
@@ -69,8 +70,8 @@ public class UsersActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (UsersActivity.this.users.size() > position) {
-                    User user = UsersActivity.this.users.get(position);
+                if (UsersActivity.this.users.length > position) {
+                    User user = UsersActivity.this.users[position];
                     Intent returnIntent = new Intent();
                     returnIntent.putExtra(RESULT_MESSAGE, user);
                     setResult(Activity.RESULT_OK, returnIntent);
@@ -117,34 +118,32 @@ public class UsersActivity extends AppCompatActivity {
         swipeRefreshLayout.setRefreshing(false);
     }
 
-    private List<User> users = Collections.EMPTY_LIST;
+    private User[] users = new User[]{};
 
-    private class UserTask extends AsyncTask<Void, Void, List<User>> {
+    private class UserTask extends AsyncTask<Void, Void, User[]> {
         @Override
-        protected List<User> doInBackground(Void... params) {
+        protected User[] doInBackground(Void... params) {
             webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
-            JSONArray users;
             try {
-                users = webb.get("/consumers")
+                String response = webb.get("/consumers")
                         .ensureSuccess()
-                        .asJsonArray()
+                        .asString()
                         .getBody();
-            } catch (WebbException e) {
-                return Collections.EMPTY_LIST;
+                Gson gson = new Gson();
+                return gson.fromJson(response, User[].class);
+            } catch (JsonParseException e) {
+                return new User[]{};
             }
-
-            try {
-                return Serializer.deserializeUsers(users);
-            } catch (JSONException e) {
-                return Collections.EMPTY_LIST;
+            catch (WebbException e) {
+                return new User[]{};
             }
         }
 
         @Override
-        protected void onPostExecute(List<User> users) {
+        protected void onPostExecute(User[] users) {
             UsersActivity.this.users = users;
 
-            List<Map<String, String>> usersList = new ArrayList<>(users.size());
+            List<Map<String, String>> usersList = new ArrayList<>(users.length);
             for (User user : users) {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put("username", user.getUsername());
@@ -160,7 +159,7 @@ public class UsersActivity extends AppCompatActivity {
             SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
             swipeRefreshLayout.setRefreshing(false);
 
-            if (users.isEmpty()) {
+            if (users.length == 0) {
                 Snackbar snackbar = Snackbar
                         .make(findViewById(android.R.id.content), "Icebox service not found!", Snackbar.LENGTH_LONG);
 

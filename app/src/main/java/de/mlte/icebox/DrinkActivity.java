@@ -12,13 +12,12 @@ import android.widget.TextView;
 
 import com.goebl.david.Webb;
 import com.goebl.david.WebbException;
+import com.google.gson.Gson;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.mlte.icebox.model.Consumption;
 import de.mlte.icebox.model.Drink;
-import de.mlte.icebox.model.Serializer;
 import de.mlte.icebox.model.User;
 
 public class DrinkActivity extends AppCompatActivity {
@@ -70,19 +69,18 @@ public class DrinkActivity extends AppCompatActivity {
     private class BuyTask extends AsyncTask<Consumption, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Consumption... params) {
-            JSONObject body = null;
             try {
-                body = Serializer.serializeConsumption(params[0]);
+                Gson gson = new Gson();
+                String body = gson.toJson(params[0]);
                 webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
                 JSONObject response = webb.post("/consumptions")
                         .body(body)
+                        .header("Content-Type", "application/json")
                         .ensureSuccess()
                         .asJsonObject()
                         .getBody();
                 Log.d("mlte", "Buy Response: " + response.toString());
                 // TODO handle response
-            } catch (JSONException e) {
-                return false;
             } catch (WebbException e) {
                 return false;
             }

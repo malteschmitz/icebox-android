@@ -32,4 +32,7 @@ dependencies {
 
     // JSON REST Client
     compile 'com.goebl:david-webb:1.3.0'
+
+    // Google JSON library
+    compile 'com.google.code.gson:gson:2.7'
 }

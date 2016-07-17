@@ -25,6 +25,9 @@ import android.widget.TextView;
 
 import com.goebl.david.Webb;
 import com.goebl.david.WebbException;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -41,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 
 import de.mlte.icebox.model.Drink;
-import de.mlte.icebox.model.Serializer;
 import de.mlte.icebox.model.User;
 
 public class IceboxActivity extends AppCompatActivity {
@@ -81,7 +83,7 @@ public class IceboxActivity extends AppCompatActivity {
         swipeRefreshLayout.setRefreshing(false);
     }
 
-    private List<Drink> drinks = Collections.EMPTY_LIST;
+    private Drink[] drinks = new Drink[]{};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,8 +106,8 @@ public class IceboxActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (IceboxActivity.this.drinks.size() > position) {
-                    Drink drink = IceboxActivity.this.drinks.get(position);
+                if (IceboxActivity.this.drinks.length > position) {
+                    Drink drink = IceboxActivity.this.drinks[position];
                     drink(drink);
                 }
             }
@@ -145,21 +147,18 @@ public class IceboxActivity extends AppCompatActivity {
     private class UserTask extends AsyncTask<String, Void, User> {
         @Override
         protected User doInBackground(String... params) {
-            JSONObject user;
             try {
                 webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
 
-                user = webb.get("/consumers/" + urlEncode(params[0]))
+                String response = webb.get("/consumers/" + urlEncode(params[0]))
                         .ensureSuccess()
-                        .asJsonObject()
+                        .asString()
                         .getBody();
-            } catch (WebbException e) {
+                Gson gson = new Gson();
+                return gson.fromJson(response, User.class);
+            } catch(JsonSyntaxException e) {
                 return null;
-            }
-
-            try {
-                return Serializer.deserializeUser(user);
-            } catch (JSONException e) {
+            } catch (WebbException e) {
                 return null;
             }
         }
@@ -235,32 +234,30 @@ public class IceboxActivity extends AppCompatActivity {
         }
     }
 
-    private class DrinkTask extends AsyncTask<Void, Void, List<Drink>> {
+    private class DrinkTask extends AsyncTask<Void, Void, Drink[]> {
         @Override
-        protected List<Drink> doInBackground(Void... params) {
+        protected Drink[] doInBackground(Void... params) {
             JSONArray drinks;
             try {
                 webb.setBaseUri(getSharedPreferences(SettingsActivity.SETTINGS_NAME, SettingsActivity.SETTINGS_MODE).getString(SettingsActivity.SETTINGS_BASE_URL, IceboxActivity.DEFAULT_BASE_URL));
-                drinks = webb.get("/drinks")
+                String response = webb.get("/drinks")
                         .ensureSuccess()
-                        .asJsonArray()
+                        .asString()
                         .getBody();
+                final Gson gson = new Gson();
+                return gson.fromJson(response, Drink[].class);
+            } catch (JsonSyntaxException e) {
+                return new Drink[]{};
             } catch (WebbException e) {
-                return Collections.EMPTY_LIST;
-            }
-
-            try {
-                return Serializer.deserializeDrinks(drinks);
-            } catch (JSONException e) {
-                return Collections.EMPTY_LIST;
+                return new Drink[]{};
             }
         }
 
         @Override
-        protected void onPostExecute(List<Drink> drinks) {
+        protected void onPostExecute(Drink[] drinks) {
             IceboxActivity.this.drinks = drinks;
 
-            List<Map<String, String>> drinksList = new ArrayList<>(drinks.size());
+            List<Map<String, String>> drinksList = new ArrayList<>(drinks.length);
             for (Drink drink: drinks) {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put("name", drink.getName());
@@ -276,7 +273,7 @@ public class IceboxActivity extends AppCompatActivity {
             SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
             swipeRefreshLayout.setRefreshing(false);
 
-            if (drinks.isEmpty()) {
+            if (drinks.length == 0) {
                 Snackbar snackbar = Snackbar
                         .make(findViewById(android.R.id.content), "Icebox service not found!", Snackbar.LENGTH_LONG);
 

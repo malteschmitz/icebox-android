@@ -4,7 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class User implements Parcelable {
-    protected User() {}
+    public User() {}
 
     protected User(Parcel in) {
         username = in.readString();

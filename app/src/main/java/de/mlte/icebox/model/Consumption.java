@@ -11,4 +11,6 @@ public class Consumption {
     public String getUsername() {
         return username;
     }
+
+    public Consumption() {}
 }
